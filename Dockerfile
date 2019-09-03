@@ -1,13 +1,12 @@
 FROM ubuntu:18.04
-#FROM rattydave/ubuntu-ssh:18.04
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV DBUS_SESSION_BUS_ADDRESS=/dev/null
 ENV LANG=zh_CN.UTF-8
 ENV LANGUAGE=zh_CN:zh
 ENV LC_ALL=zh_CN.UTF-8
-
-COPY sources.list /etc/apt/sources.list
+ENV TZ=Asia/Shanghai
+ENV UMASK_SET=000
 
 RUN apt-get update -y && apt-get upgrade -y && \
     apt-get install -yqq apt-utils software-properties-common
@@ -15,11 +14,11 @@ RUN apt-get update -y && apt-get upgrade -y && \
 RUN cd /root && \
     sed -i 's/^#\s*\(deb.*partner\)$/\1/g' /etc/apt/sources.list && \
     apt-get install -yqq locales  && \
-    echo 'LANG="zh_CN.UTF-8"' > /etc/default/locale && \
-    echo 'LANGUAGE="zh_CN:zh"' >> /etc/default/locale && \
-    echo 'LC_ALL="zh_CN.UTF-8"' >> /etc/default/locale && \
-    locale-gen zh_CN.UTF-8 && \
-    update-locale LANG=zh_CN.UTF-8 && \
+    echo 'LANG=$LANG' > /etc/default/locale && \
+    echo 'LANGUAGE=$LANGUAGE' >> /etc/default/locale && \
+    echo 'LC_ALL=$LC_ALL' >> /etc/default/locale && \
+    locale-gen $LANG && \
+    update-locale $LANG && \
     apt-get install -yqq \
         mate-desktop-environment-core \
         mate-themes \
@@ -59,10 +58,21 @@ RUN cd /root && \
         curl \
         wget \
         epiphany-browser && \
-    ln -fs /usr/share/zoneinfo/Europe/London /etc/localtime && dpkg-reconfigure -f noninteractive tzdata && \
+
+    add-apt-repository ppa:qbittorrent-team/qbittorrent-stable && \
+    add-apt-repository ppa:a-v-shkop/chromium && \
+    apt-get update && apt-get upgrade -yqq && apt-get install -yqq qbittorrent \
+    language-pack-zh-hans language-pack-zh-hans-base \
+    xfonts-wqy fonts-wqy-zenhei fonts-wqy-microhei \
+    chromium-browser chromium-browser-l18n && \
+
+#    ln -fs /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && dpkg-reconfigure -f noninteractive tzdata && \
+    RUN echo $TZ > /etc/timezone && dpkg-reconfigure -f noninteractive tzdata && \
     apt-get -y autoclean && apt-get -y autoremove && \
     apt-get -y purge $(dpkg --get-selections | grep deinstall | sed s/deinstall//g) && \
     rm -rf /var/lib/apt/lists/*  && \
+    rm -rf /tmp/* /var/tmp/* /var/lib/apt/lists/* /var/cache/* /root/sources/*
+
     echo "mate-session" > /etc/skel/.xsession && \
     sed -i '/TerminalServerUsers/d' /etc/xrdp/sesman.ini  && \
     sed -i '/TerminalServerAdmins/d' /etc/xrdp/sesman.ini  && \
@@ -86,7 +96,7 @@ RUN cd /root && \
     #echo "Type=Application" >> /etc/xdg/autostart/setxkbmap.desktop && \
     #echo "Exec=setxkbmap gb" >> /etc/xdg/autostart/setxkbmap.desktop && \
     #echo "Hidden=false" >> /etc/xdg/autostart/setxkbmap.desktop && \
-    #echo "X-MATE-Autostart-enabled=true" >> /etc/xdg/autostart/setxkbmap.desktop && \
+    echo "X-MATE-Autostart-enabled=true" >> /etc/xdg/autostart/setxkbmap.desktop && \
     #echo "Name[C]=SetKeyBoard GB" >> /etc/xdg/autostart/setxkbmap.desktop && \
     #echo "Name=SetKeyBoard GB" >> /etc/xdg/autostart/setxkbmap.desktop && \
     #echo "Comment[C]=Sets the keyboard to GB" >> /etc/xdg/autostart/setxkbmap.desktop && \
@@ -97,13 +107,4 @@ ADD xrdp.ini /etc/xrdp/xrdp.ini
 ADD startup.sh /root/startup.sh
 CMD ["/bin/bash", "/root/startup.sh"]
                                     
-EXPOSE 3389
-
-RUN add-apt-repository ppa:qbittorrent-team/qbittorrent-stable && \
-    apt-get update && apt-get upgrade -yqq && apt-get install -yqq qbittorrent \
-    language-pack-zh-hans language-pack-zh-hans-base \
-    xfonts-wqy fonts-wqy-zenhei fonts-wqy-microhei && \
-    apt-get remove -y build-essential && \
-    apt-get autoremove -y && \
-    apt-get clean -y && \
-    rm -rf /tmp/* /var/tmp/* /var/lib/apt/lists/* /var/cache/* /root/sources/*
+EXPOSE 3389 8080 6881 6881/udp

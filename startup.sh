@@ -33,6 +33,8 @@ fi
 #cat /etc/hosts.ori  >/etc/hosts
 #cat hosts >> /etc/hosts
 
+UMASK_SET=${UMASK_SET:-022}
+umask "$UMASK_SET"
 
 #This has to be the last command!
 /usr/bin/supervisord -n
