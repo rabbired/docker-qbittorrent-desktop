@@ -2,24 +2,22 @@ FROM ubuntu:18.04
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV DBUS_SESSION_BUS_ADDRESS=/dev/null
-ENV LANG=zh_CN.UTF-8
-ENV LANGUAGE=zh_CN:zh
-ENV LC_ALL=zh_CN.UTF-8
-ENV TZ=Asia/Shanghai
-ENV UMASK_SET=000
 
-RUN apt-get update -y && apt-get upgrade -y && \
-    apt-get install -yqq apt-utils software-properties-common
+COPY sources.list /etc/apt/sources.list
 
 RUN cd /root && \
     sed -i 's/^#\s*\(deb.*partner\)$/\1/g' /etc/apt/sources.list && \
-    apt-get install -yqq locales  && \
-    echo 'LANG=$LANG' > /etc/default/locale && \
-    echo 'LANGUAGE=$LANGUAGE' >> /etc/default/locale && \
-    echo 'LC_ALL=$LC_ALL' >> /etc/default/locale && \
-    locale-gen $LANG && \
-    update-locale $LANG && \
-    apt-get install -yqq \
+    apt-get update && \
+    apt-get install -yqq apt-utils && \
+    apt-get upgrade -yqq && \
+    apt-get install -yqq locales \
+        software-properties-common \
+        python3 \
+        python3-pip && \
+    ln -s /usr/bin/pip3 /bin/pip && \
+    add-apt-repository ppa:qbittorrent-team/qbittorrent-stable
+
+RUN apt-get install -yqq \
         mate-desktop-environment-core \
         mate-themes \
         mate-accessibility-profiles \
@@ -46,8 +44,9 @@ RUN cd /root && \
         ubuntu-mate-themes \
         xrdp \
         xorgxrdp \
-        tightvncserver && \
-    apt-get install --no-install-recommends -yqq \
+        tightvncserver
+
+RUN apt-get install --no-install-recommends -yqq \
         supervisor \
         sudo \
         tzdata \
@@ -57,22 +56,34 @@ RUN cd /root && \
         xterm \
         curl \
         wget \
-        epiphany-browser && \
+        epiphany-browser \
+        qbittorrent \
+        language-pack-zh-hans \
+        language-pack-zh-hans-base \
+        fonts-wqy-microhei \
+        ttf-wqy-zenhei \
+        chromium-browser \
+        chromium-browser-l10n
 
-    add-apt-repository ppa:qbittorrent-team/qbittorrent-stable && \
-    add-apt-repository ppa:a-v-shkop/chromium && \
-    apt-get update && apt-get upgrade -yqq && apt-get install -yqq qbittorrent \
-    language-pack-zh-hans language-pack-zh-hans-base \
-    xfonts-wqy fonts-wqy-zenhei fonts-wqy-microhei \
-    chromium-browser chromium-browser-l18n && \
+ENV LANG=zh_CN.UTF-8
+ENV LANGUAGE=zh_CN:zh
+ENV LC_ALL=zh_CN.UTF-8
+ENV TZ=Asia/Shanghai
+ENV UMASK_SET=000
 
 #    ln -fs /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && dpkg-reconfigure -f noninteractive tzdata && \
-    RUN echo $TZ > /etc/timezone && dpkg-reconfigure -f noninteractive tzdata && \
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python2 100 && \
+    update-alternatives --install /usr/bin/python python /usr/bin/python3 150 && \
+    echo LANG=$LANG > /etc/default/locale && \
+    echo LANGUAGE=$LANGUAGE >> /etc/default/locale && \
+    echo LC_ALL=$LC_ALL >> /etc/default/locale && \
+    locale-gen $LANG && \
+    update-locale $LANG && \
+    echo $TZ > /etc/timezone && dpkg-reconfigure -f noninteractive tzdata && \
     apt-get -y autoclean && apt-get -y autoremove && \
     apt-get -y purge $(dpkg --get-selections | grep deinstall | sed s/deinstall//g) && \
     rm -rf /var/lib/apt/lists/*  && \
-    rm -rf /tmp/* /var/tmp/* /var/lib/apt/lists/* /var/cache/* /root/sources/*
-
+    rm -rf /tmp/* /var/tmp/* /var/lib/apt/lists/* /var/cache/* /root/sources/* && \
     echo "mate-session" > /etc/skel/.xsession && \
     sed -i '/TerminalServerUsers/d' /etc/xrdp/sesman.ini  && \
     sed -i '/TerminalServerAdmins/d' /etc/xrdp/sesman.ini  && \
@@ -91,20 +102,20 @@ RUN cd /root && \
     echo "process_name = xrdp-sesman" >> /etc/supervisor/conf.d/xrdp.conf && \
     echo "[program:xrdp]" >> /etc/supervisor/conf.d/xrdp.conf && \
     echo "command=/usr/sbin/xrdp -nodaemon" >> /etc/supervisor/conf.d/xrdp.conf && \
-    echo "process_name = xrdp" >> /etc/supervisor/conf.d/xrdp.conf
+    echo "process_name = xrdp" >> /etc/supervisor/conf.d/xrdp.conf && \
     #echo "[Desktop Entry]" > /etc/xdg/autostart/setxkbmap.desktop && \
     #echo "Type=Application" >> /etc/xdg/autostart/setxkbmap.desktop && \
     #echo "Exec=setxkbmap gb" >> /etc/xdg/autostart/setxkbmap.desktop && \
     #echo "Hidden=false" >> /etc/xdg/autostart/setxkbmap.desktop && \
-    echo "X-MATE-Autostart-enabled=true" >> /etc/xdg/autostart/setxkbmap.desktop && \
     #echo "Name[C]=SetKeyBoard GB" >> /etc/xdg/autostart/setxkbmap.desktop && \
     #echo "Name=SetKeyBoard GB" >> /etc/xdg/autostart/setxkbmap.desktop && \
     #echo "Comment[C]=Sets the keyboard to GB" >> /etc/xdg/autostart/setxkbmap.desktop && \
     #echo "Comment=Sets the keyboard to GB" >> /etc/xdg/autostart/setxkbmap.desktop
+    echo "X-MATE-Autostart-enabled=true" >> /etc/xdg/autostart/setxkbmap.desktop
 
 ADD xrdp.ini /etc/xrdp/xrdp.ini
-
 ADD startup.sh /root/startup.sh
+
 CMD ["/bin/bash", "/root/startup.sh"]
                                     
 EXPOSE 3389 8080 6881 6881/udp
