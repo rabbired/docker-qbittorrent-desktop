@@ -3,18 +3,13 @@ FROM ubuntu:18.04
 ENV DEBIAN_FRONTEND noninteractive
 ENV DBUS_SESSION_BUS_ADDRESS=/dev/null
 
-COPY sources.list /etc/apt/sources.list
-
 RUN cd /root && \
     sed -i 's/^#\s*\(deb.*partner\)$/\1/g' /etc/apt/sources.list && \
     apt-get update && \
-    apt-get install -yqq apt-utils && \
+#    apt-get install -yqq apt-utils && \
     apt-get upgrade -yqq && \
     apt-get install -yqq locales \
         software-properties-common \
-        python3 \
-        python3-pip && \
-    ln -s /usr/bin/pip3 /bin/pip && \
     add-apt-repository ppa:qbittorrent-team/qbittorrent-stable
 
 RUN apt-get install -yqq \
@@ -71,15 +66,12 @@ ENV LC_ALL=zh_CN.UTF-8
 ENV TZ=Asia/Shanghai
 ENV UMASK_SET=000
 
-#    ln -fs /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && dpkg-reconfigure -f noninteractive tzdata && \
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python2 100 && \
-    update-alternatives --install /usr/bin/python python /usr/bin/python3 150 && \
-    echo LANG=$LANG > /etc/default/locale && \
+RUN echo LANG=$LANG > /etc/default/locale && \
     echo LANGUAGE=$LANGUAGE >> /etc/default/locale && \
     echo LC_ALL=$LC_ALL >> /etc/default/locale && \
     locale-gen $LANG && \
     update-locale $LANG && \
-    echo $TZ > /etc/timezone && dpkg-reconfigure -f noninteractive tzdata && \
+    ln -fs /usr/share/zoneinfo/$TZ /etc/localtime && dpkg-reconfigure -f noninteractive tzdata && \
     apt-get -y autoclean && apt-get -y autoremove && \
     apt-get -y purge $(dpkg --get-selections | grep deinstall | sed s/deinstall//g) && \
     rm -rf /var/lib/apt/lists/*  && \
