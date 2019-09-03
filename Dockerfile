@@ -10,7 +10,8 @@ RUN cd /root && \
     apt-get upgrade -yqq && \
     apt-get install -yqq locales \
         software-properties-common && \
-    add-apt-repository ppa:qbittorrent-team/qbittorrent-stable
+    add-apt-repository ppa:qbittorrent-team/qbittorrent-stable && \
+    apt-get update
 
 RUN apt-get install -yqq \
         mate-desktop-environment-core \
