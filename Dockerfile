@@ -9,7 +9,7 @@ RUN cd /root && \
 #    apt-get install -yqq apt-utils && \
     apt-get upgrade -yqq && \
     apt-get install -yqq locales \
-        software-properties-common \
+        software-properties-common && \
     add-apt-repository ppa:qbittorrent-team/qbittorrent-stable
 
 RUN apt-get install -yqq \
