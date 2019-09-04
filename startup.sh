@@ -7,15 +7,15 @@
 file="/root/createusers.txt"
 if [ -f $file ]
   then
-    while IFS=: read -r username password is_sudo
+    while IFS=: read -r username password is_sudo umask_set
         do
-            echo "Username: $username, Password: $password , Sudo: $is_sudo"
+            echo "Username: $username, Password: $password , Sudo: $is_sudo , Umask: $umask_set"
 
             if getent passwd $username > /dev/null 2>&1
               then
                 echo "User Exists"
               else
-                useradd -ms /bin/bash -K UMASK=$UMASK_SET $username
+                useradd -ms /bin/bash -K UMASK=$umask_set $username
                 echo "$username:$password" | chpasswd
                 if [ "$is_sudo" = "Y" ]
                   then
