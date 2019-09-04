@@ -15,7 +15,7 @@ if [ -f $file ]
               then
                 echo "User Exists"
               else
-                useradd -ms -K UMASK=$UMASK_SET /bin/bash $username
+                useradd -ms /bin/bash -K UMASK=$UMASK_SET $username
                 echo "$username:$password" | chpasswd
                 if [ "$is_sudo" = "Y" ]
                   then
@@ -32,9 +32,6 @@ fi
 #wget -o newhosts.txt https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/fakenews/hosts
 #cat /etc/hosts.ori  >/etc/hosts
 #cat hosts >> /etc/hosts
-
-#UMASK_SET=${UMASK_SET:-0022}
-#umask "$UMASK_SET"
 
 #This has to be the last command!
 /usr/bin/supervisord -n
