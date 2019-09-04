@@ -65,7 +65,7 @@ ENV LANG=zh_CN.UTF-8
 ENV LANGUAGE=zh_CN:zh
 ENV LC_ALL=zh_CN.UTF-8
 ENV TZ=Asia/Shanghai
-ENV UMASK_SET=000
+ENV UMASK_SET=0000
 
 RUN echo LANG=$LANG > /etc/default/locale && \
     echo LANGUAGE=$LANGUAGE >> /etc/default/locale && \
